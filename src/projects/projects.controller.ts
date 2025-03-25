@@ -52,7 +52,7 @@ export class ProjectsController {
 
   @Post('invitations/:invitationId/respond')
   respondToInvitation(@Param('invitationId') invitationId: string, @Body() body: { accept: boolean }, @Request() req) {
-    return this.projectsService.respondToInvitation(+invitationId, req.user.id, body.accept);
+    return this.projectsService.respondToInvitation(+invitationId, req.user.userId, body.accept);
   }
 
   @Post(':id/leave')
