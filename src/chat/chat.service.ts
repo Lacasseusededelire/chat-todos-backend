@@ -61,7 +61,7 @@ export class ChatService {
     const message = this.messagesRepository.create({
       chat,
       sender: sender || undefined,
-      content,
+      content: content || '',
       timestamp: new Date(),
       taskId,
       fileUrl,
