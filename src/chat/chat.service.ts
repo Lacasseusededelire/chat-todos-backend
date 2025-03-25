@@ -115,4 +115,48 @@ export class ChatService {
 
     return { userMessage: userMsg, geminiResponse: geminiMsg };
   }
+  async generatePlanning(tasks: any[]): Promise<string> {
+    const tasksForPlanning = tasks.map(task => ({
+      title: task.title,
+      description: task.description,
+      startDate: task.startDate,
+      endDate: task.endDate,
+      status: task.status,
+      project: task.project?.name,
+      assignedTo: task.assignedTo?.username || 'Non assigné',
+    }));
+  
+    const message = `Génère un planning structuré pour les tâches suivantes : ${JSON.stringify(tasksForPlanning)}. Fournis une réponse sous forme de liste (et non un tableau) avec les détails suivants pour chaque tâche : Tâche, Description, Date de début, Date de fin, Statut, Assigné à, Ressources nécessaires. Par exemple :  
+  - Tâche : [Nom de la tâche]  
+    Description : [Description]  
+    Date de début : [Date]  
+    Date de fin : [Date]  
+    Statut : [Statut]  
+    Assigné à : [Utilisateur]  
+    Ressources nécessaires : [Ressources]`;
+  
+    const systemPrompt = 'Tu es un conseiller utile pour les projets et tâches. Réponds de manière concise et pratique.';
+    const contents = [{ role: 'user', parts: [{ text: `${systemPrompt}\n\n${message}` }] }];
+  
+    console.log('Envoi de la requête à Gemini avec les tâches:', tasksForPlanning);
+  
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents,
+        generationConfig: { maxOutputTokens: 500 },
+      }),
+    });
+  
+    const data = await response.json();
+    if (!response.ok) {
+      console.error('Erreur API Gemini:', data);
+      throw new Error(data.error?.message || 'Erreur API Gemini');
+    }
+  
+    const planningText = data.candidates[0].content.parts[0].text;
+    console.log('Planning généré:', planningText);
+    return planningText;
+  }
 }

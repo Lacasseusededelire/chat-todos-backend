@@ -1,11 +1,12 @@
 // chat.controller.ts
-import { Controller, Get, Post, Param, Body, UseGuards, Request, ForbiddenException, NotFoundException, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, Request, ForbiddenException, NotFoundException, UseInterceptors, UploadedFile,HttpStatus, Res } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RequestWithUser } from '../common/types/request-with-user';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { Response } from 'express';
 
 @Controller('chat')
 @UseGuards(JwtAuthGuard)
@@ -100,5 +101,16 @@ export class ChatController {
     }
 
     return this.chatService.chatWithGemini(+chatId, req.user.userId, body.message);
+  }
+  @Post('generate-planning')
+  async generatePlanning(
+    @Body() body: { tasks: any[] },
+    @Request() req,
+    @Res() res: Response, 
+  ) {
+    const planningText = await this.chatService.generatePlanning(body.tasks);
+    res.status(HttpStatus.OK);
+    res.set('Content-Type', 'text/plain');
+    res.send(planningText);
   }
 }
